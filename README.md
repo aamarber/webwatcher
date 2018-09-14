@@ -13,4 +13,5 @@ They can be passed on order or they will be asked after the launch through conso
 {1} : a css selector to specify only a subsection of the document t compare periodically
 
 Example:
+
 dotnet webwatcher.dll https://www.github.com .pagehead
