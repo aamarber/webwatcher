@@ -7,6 +7,7 @@ dotnet webwatcher.dll.
 
 ### Arguments
 They can be passed on order or they will be asked after the launch through console.
+
 {0} : the url to check periodically
 
 {1} : a css selector to specify only a subsection of the document t compare periodically
