@@ -28,6 +28,10 @@ namespace WebWatcher
             {
                 cssSelector = args[1];
             }
+            if(args.Length > 2)
+            {
+                int.TryParse(args[2], out seconds);
+            }
 
             if (string.IsNullOrEmpty(url))
             {
@@ -59,14 +63,14 @@ namespace WebWatcher
             {
                 var client = new WebClient();
 
-                Console.WriteLine($"Requesting at {DateTime.Now}...");
+                Console.WriteLine($"Requesting {url} at {DateTime.Now} {(!string.IsNullOrEmpty(cssSelector) ? $"with css selector {cssSelector}" : string.Empty)}...");
 
                 var nextWebResult = client.DownloadStringTaskAsync(new Uri(url)).GetAwaiter().GetResult();
 
                 if (string.IsNullOrEmpty(previousWebResult))
                 {
                     previousWebResult = nextWebResult;
-                    Wait();
+                    Wait(seconds);
                     continue;
                 }
 
@@ -94,12 +98,22 @@ namespace WebWatcher
                     Console.ForegroundColor = ConsoleColor.White;
                 }
 
-                Wait();
+                Wait(seconds);
             }
         }
 
         private static bool ShowDifferences(HtmlNode previousContent, HtmlNode nextContent)
         {
+            if (previousContent == null)
+            {
+                throw new ArgumentNullException(nameof(previousContent));
+            }
+
+            if (nextContent == null)
+            {
+                throw new ArgumentNullException(nameof(nextContent));
+            }
+
             var diffBuilder = new InlineDiffBuilder(new Differ());
             var diff = diffBuilder.BuildDiffModel(previousContent.InnerHtml, nextContent.InnerHtml);
 
@@ -134,9 +148,9 @@ namespace WebWatcher
             return true;
         }
 
-        private static void Wait()
+        private static void Wait(int seconds = 1)
         {
-            Thread.Sleep(1000 * 30);
+            Thread.Sleep(1000 * seconds);
         }
     }
 }
