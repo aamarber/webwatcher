@@ -18,6 +18,8 @@ namespace WebWatcher
             string url = null,
                 cssSelector = null;
 
+            int seconds = 0;
+
             if (args.Length > 0)
             {
                 url = args[0];
@@ -37,6 +39,18 @@ namespace WebWatcher
             {
                 Console.WriteLine("Type the css selector (empty if none): ");
                 cssSelector = Console.ReadLine();
+            }
+
+            if(seconds == 0)
+            {
+                Console.WriteLine("Type the frequency to check the URL (in seconds):");
+
+                string secondsConsole = Console.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(secondsConsole) || !int.TryParse(secondsConsole, out seconds))
+                {
+                    seconds = 60;
+                }
             }
 
             Console.WriteLine($"Started checking {url}");
