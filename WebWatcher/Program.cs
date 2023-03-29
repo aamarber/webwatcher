@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using DiffPlex;
 using DiffPlex.DiffBuilder;
@@ -11,61 +12,22 @@ namespace WebWatcher
 {
     class Program
     {
+        private static string url = null,
+                            cssSelector = null;
+
+        private static int seconds = 0;
+
         static void Main(string[] args)
         {
-            string previousWebResult = string.Empty;
-
-            string url = null,
-                cssSelector = null;
-
-            int seconds = 0;
-
-            if (args.Length > 0)
-            {
-                url = args[0];
-            }
-            if (args.Length > 1)
-            {
-                cssSelector = args[1];
-            }
-            if(args.Length > 2)
-            {
-                int.TryParse(args[2], out seconds);
-            }
-
-            if (string.IsNullOrEmpty(url))
-            {
-                Console.WriteLine("Type the url you want to check: ");
-                url = Console.ReadLine();
-            }
-
-            if (string.IsNullOrEmpty(cssSelector))
-            {
-                Console.WriteLine("Type the css selector (empty if none): ");
-                cssSelector = Console.ReadLine();
-            }
-
-            if(seconds == 0)
-            {
-                Console.WriteLine("Type the frequency to check the URL (in seconds):");
-
-                string secondsConsole = Console.ReadLine();
-
-                if (string.IsNullOrWhiteSpace(secondsConsole) || !int.TryParse(secondsConsole, out seconds))
-                {
-                    seconds = 60;
-                }
-            }
+            ConfigureWatcher(args);
 
             Console.WriteLine($"Started checking {url}");
 
+            string previousWebResult = string.Empty;
+
             while (true)
             {
-                var client = new WebClient();
-
-                Console.WriteLine($"Requesting {url} at {DateTime.Now} {(!string.IsNullOrEmpty(cssSelector) ? $"with css selector {cssSelector}" : string.Empty)}...");
-
-                var nextWebResult = client.DownloadStringTaskAsync(new Uri(url)).GetAwaiter().GetResult();
+                var nextWebResult = GetRequestedUrl(url, cssSelector);
 
                 if (string.IsNullOrEmpty(previousWebResult))
                 {
@@ -100,6 +62,59 @@ namespace WebWatcher
 
                 Wait(seconds);
             }
+        }
+
+        private static void ConfigureWatcher(string[] args){
+            ConfigureWatcherFromArgs(args);
+
+            if (string.IsNullOrEmpty(url))
+            {
+                Console.WriteLine("Type the url you want to check: ");
+                url = Console.ReadLine();
+            }
+
+            if (string.IsNullOrEmpty(cssSelector))
+            {
+                Console.WriteLine("Type the css selector (empty if none): ");
+                cssSelector = Console.ReadLine();
+            }
+
+            if(seconds == 0)
+            {
+                Console.WriteLine("Type the frequency to check the URL (in seconds):");
+
+                string secondsConsole = Console.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(secondsConsole) || !int.TryParse(secondsConsole, out seconds))
+                {
+                    seconds = 60;
+                }
+            }
+        }
+
+        private static void ConfigureWatcherFromArgs(string[] args){
+            if (args.Length > 0)
+            {
+                url = args[0];
+            }
+            if (args.Length > 1)
+            {
+                cssSelector = args[1];
+            }
+            if(args.Length > 2)
+            {
+                int.TryParse(args[2], out seconds);
+            }
+        }
+
+        private static string GetRequestedUrl(string url, string cssSelector){
+            var httpClient = new HttpClient();
+
+            Console.WriteLine($"Requesting {url} at {DateTime.Now} {(!string.IsNullOrEmpty(cssSelector) ? $"with css selector {cssSelector}" : string.Empty)}...");
+
+            return httpClient
+                                    .GetAsync(url).GetAwaiter().GetResult()
+                                    ?.Content?.ReadAsStringAsync().GetAwaiter().GetResult();
         }
 
         private static bool ShowDifferences(HtmlNode previousContent, HtmlNode nextContent)
